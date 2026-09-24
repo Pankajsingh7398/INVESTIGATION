@@ -27,7 +27,8 @@ export default function EvidenceManagementPage() {
     evidenceList,
     selectedEvidence,
     setSelectedEvidence,
-    uploadNewEvidence
+    uploadNewEvidence,
+    currentUser
   } = useForensics();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,14 +92,21 @@ export default function EvidenceManagementPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="glow"
-            size="md"
-            onClick={() => setIsUploadModalOpen(true)}
-            icon={<UploadCloud className="w-4 h-4" />}
-          >
-            Ingest Digital Evidence
-          </Button>
+          {currentUser.permissions.canUploadEvidence ? (
+            <Button
+              variant="glow"
+              size="md"
+              onClick={() => setIsUploadModalOpen(true)}
+              icon={<UploadCloud className="w-4 h-4" />}
+            >
+              Ingest Digital Evidence
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEF3C7] border border-[#FDE68A] text-xs font-mono text-[#92400E]">
+              <ShieldCheck className="w-4 h-4 text-[#B45309]" />
+              <span>JUDICIAL OVERSIGHT · READ-ONLY AUDIT MODE</span>
+            </div>
+          )}
         </div>
       </div>
 

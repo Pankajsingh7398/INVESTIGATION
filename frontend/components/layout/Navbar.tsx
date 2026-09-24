@@ -10,17 +10,34 @@ import {
   FolderLock,
   ChevronDown,
   Plus,
-  Binary
+  Binary,
+  LogOut,
+  UserCheck,
+  Shield,
+  Check
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useForensics } from '@/lib/store/ForensicsContext';
+import { PRESET_USERS } from '@/lib/mock/auth';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 
 export const Navbar: React.FC = () => {
+  const router = useRouter();
   const pathname = usePathname();
-  const { activeCase, cases, setActiveCaseId, loadDemoInvestigation, createNewCase } = useForensics();
+  const {
+    activeCase,
+    cases,
+    setActiveCaseId,
+    loadDemoInvestigation,
+    createNewCase,
+    currentUser,
+    switchRole,
+    logout
+  } = useForensics();
   const [isCaseModalOpen, setIsCaseModalOpen] = useState(false);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
 
   // New Case form state
@@ -104,15 +121,21 @@ export const Navbar: React.FC = () => {
             </Button>
 
             {/* Quick Case Create */}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsNewCaseOpen(true)}
-              icon={<Plus className="w-3.5 h-3.5 text-[#64748B]" />}
-              className="hidden sm:inline-flex text-xs"
-            >
-              New Case
-            </Button>
+            {currentUser.permissions.canCreateCase ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsNewCaseOpen(true)}
+                icon={<Plus className="w-3.5 h-3.5 text-[#64748B]" />}
+                className="hidden sm:inline-flex text-xs"
+              >
+                New Case
+              </Button>
+            ) : (
+              <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded bg-[#F1F5F9] border border-[#E2E8F0] text-[11px] font-mono text-[#64748B]">
+                Read-Only Audit Mode
+              </span>
+            )}
 
             {/* Integrity Status Pill */}
             <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[11px] text-[#047857] font-mono font-medium">
@@ -120,15 +143,126 @@ export const Navbar: React.FC = () => {
               <span>CHAIN OF CUSTODY VERIFIED</span>
             </div>
 
-            {/* User Profile Badge */}
-            <div className="flex items-center gap-2.5 pl-2 border-l border-[#E2E8F0]">
-              <div className="w-8 h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                AV
-              </div>
-              <div className="hidden xl:block text-left">
-                <div className="text-xs font-bold text-[#0F172A] leading-none">Insp. Alok</div>
-                <div className="text-[10px] text-[#64748B] font-mono mt-0.5">ED-CYBER-8841</div>
-              </div>
+            {/* User Profile Badge & Dropdown */}
+            <div className="relative pl-2 border-l border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-[#F1F5F9] transition-colors cursor-pointer group"
+              >
+                <div
+                  className={`w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-bold shadow-xs ${
+                    currentUser.role === 'INVESTIGATOR'
+                      ? 'bg-[#1D4ED8]'
+                      : currentUser.role === 'FORENSIC_ANALYST'
+                      ? 'bg-[#0F172A]'
+                      : 'bg-[#412D15]'
+                  }`}
+                >
+                  {currentUser.avatar_initials}
+                </div>
+                <div className="hidden xl:block text-left">
+                  <div className="text-xs font-bold text-[#0F172A] leading-none flex items-center gap-1.5">
+                    {currentUser.name}
+                    <ChevronDown className="w-3 h-3 text-[#94A3B8] group-hover:text-[#0F172A] transition-colors" />
+                  </div>
+                  <div className="text-[10px] text-[#1D4ED8] font-mono mt-0.5 font-bold">
+                    {currentUser.role.replace('_', ' ')}
+                  </div>
+                </div>
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isUserMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-72 rounded-xl bg-white border border-[#CBD5E1] shadow-lg z-50 p-3 space-y-3">
+                    {/* User Info Header */}
+                    <div className="p-2.5 rounded-lg bg-[#F8F9FA] border border-[#E2E8F0]">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${
+                            currentUser.role === 'INVESTIGATOR'
+                              ? 'bg-[#1D4ED8]'
+                              : currentUser.role === 'FORENSIC_ANALYST'
+                              ? 'bg-[#0F172A]'
+                              : 'bg-[#412D15]'
+                          }`}
+                        >
+                          {currentUser.avatar_initials}
+                        </div>
+                        <div className="overflow-hidden">
+                          <h5 className="text-xs font-bold text-[#0F172A] truncate">
+                            {currentUser.name}
+                          </h5>
+                          <p className="text-[11px] text-[#64748B] font-mono truncate">
+                            {currentUser.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-[#E2E8F0] flex items-center justify-between text-[10px] font-mono text-[#64748B]">
+                        <span>Badge: {currentUser.badge_number}</span>
+                        <span className="text-[#1D4ED8] font-bold">
+                          {currentUser.role.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Switch Roles */}
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] px-1">
+                        Switch Persona (Judge Demo)
+                      </p>
+                      {[
+                        { key: 'investigator' as const, label: 'Insp. Alok (Investigator)', role: 'INVESTIGATOR' },
+                        { key: 'analyst' as const, label: 'Khushboo Rawat (Analyst)', role: 'FORENSIC_ANALYST' },
+                        { key: 'auditor' as const, label: 'Hon. S. Narayanan (Auditor)', role: 'JUDICIAL_AUDITOR' }
+                      ].map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => {
+                            switchRole(item.key);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                            currentUser.role === item.role
+                              ? 'bg-[#EFF6FF] text-[#1D4ED8] font-bold'
+                              : 'text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="w-3.5 h-3.5" />
+                            <span>{item.label}</span>
+                          </div>
+                          {currentUser.role === item.role && (
+                            <Check className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Sign out */}
+                    <div className="pt-2 border-t border-[#E2E8F0]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout();
+                          setIsUserMenuOpen(false);
+                          router.push('/login');
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#B91C1C] hover:bg-[#FEF2F2] transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out / Switch Account</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

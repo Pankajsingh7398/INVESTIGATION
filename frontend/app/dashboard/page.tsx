@@ -34,7 +34,8 @@ export default function DashboardPage() {
     entitiesList,
     timelineEvents,
     loadDemoInvestigation,
-    setSelectedEvidence
+    setSelectedEvidence,
+    currentUser
   } = useForensics();
 
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
@@ -64,11 +65,14 @@ export default function DashboardPage() {
               </Badge>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
-              Investigator Operations Dashboard
+              Welcome, {currentUser.name.split(' ').slice(-1)[0]}
             </h1>
             <p className="text-sm text-[#475569] mt-1 max-w-2xl leading-relaxed">
-              Automated ingestion, entity-relationship intelligence, chronological timeline synthesis,
-              and tamper-evident cryptographic chain of custody.
+              {currentUser.role === 'JUDICIAL_AUDITOR'
+                ? 'Judicial read-only audit mode — review evidence integrity and chain of custody compliance.'
+                : currentUser.role === 'FORENSIC_ANALYST'
+                ? 'Forensic analysis workspace — evidence extraction, NER pipeline, and hash verification.'
+                : 'Automated ingestion, entity-relationship intelligence, chronological timeline synthesis, and tamper-evident cryptographic chain of custody.'}
             </p>
           </div>
 

@@ -8,12 +8,15 @@ import {
   TimelineEvent,
   GraphData,
   AIQueryResponse,
-  EvidenceProcessingStatus
+  EvidenceProcessingStatus,
+  UserProfile
 } from '@/types/forensics';
 import { forensicsApi } from '@/lib/api/client';
 import { DEMO_CASE_102 } from '@/lib/mock/case102';
+import { PRESET_USERS } from '@/lib/mock/auth';
 
 interface ForensicsContextType {
+  currentUser: UserProfile;
   activeCase: Case | null;
   cases: Case[];
   evidenceList: Evidence[];
@@ -30,11 +33,15 @@ interface ForensicsContextType {
   queryAssistant: (question: string) => Promise<AIQueryResponse>;
   refreshActiveCaseData: () => Promise<void>;
   simulateProcessingPipeline: (evidenceId: string) => void;
+  switchRole: (roleKey: 'investigator' | 'analyst' | 'auditor') => void;
+  login: (presetKeyOrEmail: string) => void;
+  logout: () => void;
 }
 
 const ForensicsContext = createContext<ForensicsContextType | undefined>(undefined);
 
 export function ForensicsProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<UserProfile>(PRESET_USERS.investigator);
   const [cases, setCases] = useState<Case[]>([DEMO_CASE_102]);
   const [activeCase, setActiveCase] = useState<Case | null>(DEMO_CASE_102);
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
@@ -43,6 +50,42 @@ export function ForensicsProvider({ children }: { children: ReactNode }) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('evidencegraph_user_role');
+      if (saved && PRESET_USERS[saved]) {
+        setCurrentUser(PRESET_USERS[saved]);
+      }
+    }
+  }, []);
+
+  const switchRole = (roleKey: 'investigator' | 'analyst' | 'auditor') => {
+    if (PRESET_USERS[roleKey]) {
+      setCurrentUser(PRESET_USERS[roleKey]);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('evidencegraph_user_role', roleKey);
+      }
+    }
+  };
+
+  const login = (roleOrEmail: string) => {
+    const term = roleOrEmail.toLowerCase().trim();
+    if (term.includes('analyst') || term.includes('khushboo') || term.includes('cfsl')) {
+      switchRole('analyst');
+    } else if (term.includes('auditor') || term.includes('narayanan') || term.includes('judge') || term.includes('court')) {
+      switchRole('auditor');
+    } else {
+      switchRole('investigator');
+    }
+  };
+
+  const logout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('evidencegraph_user_role');
+    }
+    setCurrentUser(PRESET_USERS.investigator);
+  };
 
   const refreshActiveCaseData = async () => {
     if (!activeCase) return;
@@ -151,6 +194,7 @@ export function ForensicsProvider({ children }: { children: ReactNode }) {
   return (
     <ForensicsContext.Provider
       value={{
+        currentUser,
         activeCase,
         cases,
         evidenceList,
@@ -166,7 +210,10 @@ export function ForensicsProvider({ children }: { children: ReactNode }) {
         uploadNewEvidence,
         queryAssistant,
         refreshActiveCaseData,
-        simulateProcessingPipeline
+        simulateProcessingPipeline,
+        switchRole,
+        login,
+        logout
       }}
     >
       {children}

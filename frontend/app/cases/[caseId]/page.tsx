@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/Badge';
 
 export default function CaseDetailPage() {
   const params = useParams();
-  const { activeCase, evidenceList, entitiesList, timelineEvents } = useForensics();
+  const { activeCase, evidenceList, entitiesList, timelineEvents, currentUser } = useForensics();
 
   if (!activeCase) {
     return (
@@ -74,11 +74,18 @@ export default function CaseDetailPage() {
 
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
-            <Link href={`/cases/${activeCase.case_id}/evidence`}>
-              <Button variant="primary" size="md" icon={<UploadCloud className="w-4 h-4" />} className="w-full">
-                Upload New Evidence
-              </Button>
-            </Link>
+            {currentUser.permissions.canUploadEvidence ? (
+              <Link href={`/cases/${activeCase.case_id}/evidence`}>
+                <Button variant="primary" size="md" icon={<UploadCloud className="w-4 h-4" />} className="w-full">
+                  Upload New Evidence
+                </Button>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEF3C7] border border-[#FDE68A] text-xs font-mono text-[#92400E]">
+                <ShieldCheck className="w-4 h-4 text-[#B45309]" />
+                <span>READ-ONLY AUDIT</span>
+              </div>
+            )}
             <Link href={`/cases/${activeCase.case_id}/assistant`}>
               <Button variant="glow" size="md" icon={<Sparkles className="w-4 h-4" />} className="w-full">
                 Launch AI Assistant

@@ -126,3 +126,21 @@ export interface AIQueryResponse {
   confidence: number;
   timestamp: string;
 }
+
+export type UserRole = 'INVESTIGATOR' | 'FORENSIC_ANALYST' | 'JUDICIAL_AUDITOR';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  badge_number: string;
+  department: string;
+  avatar_initials: string;
+  permissions: {
+    canUploadEvidence: boolean;
+    canCreateCase: boolean;
+    canUseAssistant: boolean;
+    canVerifyChainOfCustody: boolean;
+  };
+}

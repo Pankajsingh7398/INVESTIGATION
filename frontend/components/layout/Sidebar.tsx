@@ -11,13 +11,15 @@ import {
   Share2,
   Sparkles,
   ShieldCheck,
-  Cpu
+  Cpu,
+  Scale,
+  ShieldAlert
 } from 'lucide-react';
 import { useForensics } from '@/lib/store/ForensicsContext';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { activeCase, evidenceList, entitiesList, timelineEvents } = useForensics();
+  const { activeCase, evidenceList, entitiesList, timelineEvents, currentUser } = useForensics();
   const caseId = activeCase?.case_id || 'CASE-102';
 
   const navItems = [
@@ -62,6 +64,43 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 shrink-0 border-r border-[#E2E8F0] bg-white min-h-[calc(100vh-4rem)] flex flex-col justify-between p-4 text-[#0F172A] shadow-2xs">
       <div className="space-y-6">
+        {/* Active Persona Banner */}
+        <div className="p-2.5 rounded-lg border bg-[#F8F9FA] border-[#E2E8F0]">
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                currentUser.role === 'INVESTIGATOR'
+                  ? 'bg-[#1D4ED8]'
+                  : currentUser.role === 'FORENSIC_ANALYST'
+                  ? 'bg-[#0F172A]'
+                  : 'bg-[#412D15]'
+              }`}
+            />
+            <span className="text-[10px] font-mono font-bold text-[#64748B]">
+              AUTH PERSONA:
+            </span>
+          </div>
+          <div className="text-xs font-bold text-[#0F172A] mt-0.5 truncate">
+            {currentUser.name}
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[10px] font-mono">
+            <span
+              className={`font-semibold px-1.5 py-0.2 rounded ${
+                currentUser.role === 'INVESTIGATOR'
+                  ? 'bg-blue-50 text-[#1D4ED8]'
+                  : currentUser.role === 'FORENSIC_ANALYST'
+                  ? 'bg-slate-100 text-[#0F172A]'
+                  : 'bg-amber-50 text-[#412D15]'
+              }`}
+            >
+              {currentUser.role.replace('_', ' ')}
+            </span>
+            <span className="text-[#64748B]">
+              {currentUser.permissions.canUploadEvidence ? 'Write Access' : 'Read-Only'}
+            </span>
+          </div>
+        </div>
+
         {/* Active Investigation Context Card */}
         <div className="p-3.5 rounded-xl bg-[#F8F9FA] border border-[#E2E8F0]">
           <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B]">
