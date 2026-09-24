@@ -61,7 +61,7 @@ export default function CaseDetailPage() {
             </p>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {activeCase.tags.map((tag) => (
+              {(activeCase.tags || []).map((tag) => (
                 <span
                   key={tag}
                   className="text-xs px-2.5 py-0.5 rounded-full bg-[#F5F2EB] text-[#574C3A] border border-[#E5DFD5] font-medium"
@@ -125,7 +125,7 @@ export default function CaseDetailPage() {
             </span>
             <div className="flex items-center gap-1.5 mt-1 font-bold text-[#0F172A] font-mono">
               <Calendar className="w-3.5 h-3.5 text-[#1D4ED8]" />
-              <span>{new Date(activeCase.created_at).toLocaleDateString()}</span>
+              <span suppressHydrationWarning>{new Date(activeCase.created_at).toLocaleDateString()}</span>
             </div>
           </div>
 

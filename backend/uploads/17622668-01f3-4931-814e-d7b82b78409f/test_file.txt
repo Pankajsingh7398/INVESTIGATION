@@ -1,0 +1,1 @@
+Dummy forensic file content for SHA-256 testing

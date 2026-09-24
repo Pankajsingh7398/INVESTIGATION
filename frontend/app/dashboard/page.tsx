@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 {activeCase.description}
               </p>
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {activeCase.tags.map((t) => (
+                {(activeCase.tags || []).map((t) => (
                   <span
                     key={t}
                     className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#F5F2EB] text-[#574C3A] border border-[#E5DFD5]"

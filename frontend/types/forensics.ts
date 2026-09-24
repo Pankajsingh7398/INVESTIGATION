@@ -15,7 +15,7 @@ export interface Case {
   evidence_count: number;
   entity_count: number;
   event_count: number;
-  tags: string[];
+  tags?: string[];
 }
 
 export type EvidenceType = 'Document' | 'Image' | 'Chat' | 'Audio' | 'Archive' | 'Financial Record' | 'Server Log';

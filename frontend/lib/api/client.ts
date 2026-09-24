@@ -49,9 +49,41 @@ function setStoredItem<T>(key: string, value: T): void {
   }
 }
 
+function normalizeCase(raw: any): Case {
+  return {
+    case_id: raw.case_id || raw.human_id || raw.id || 'CASE-102',
+    title: raw.title || raw.name || 'Untitled Investigation',
+    description: raw.description || '',
+    status: raw.status || 'ACTIVE',
+    priority: raw.priority || 'HIGH',
+    investigator: raw.investigator || 'Insp. Alok Vishwakarma',
+    badge_number: raw.badge_number || 'ED-CYBER-8841',
+    department: raw.department || 'Digital Forensics & Cyber Intelligence',
+    created_at: raw.created_at || new Date().toISOString(),
+    updated_at: raw.updated_at || new Date().toISOString(),
+    evidence_count: raw.evidence_count ?? 0,
+    entity_count: raw.entity_count ?? 0,
+    event_count: raw.event_count ?? 0,
+    tags: Array.isArray(raw.tags) && raw.tags.length > 0
+      ? raw.tags
+      : ['Financial Fraud', 'Hawala', 'Offshore', 'Shell Companies']
+  };
+}
+
 export const forensicsApi = {
   // Load Demo Investigation (Case #102)
   loadDemoCase: async (): Promise<Case> => {
+    if (!USE_MOCK) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/demo/load`, { method: 'POST' });
+        if (res.ok) {
+          const raw = await res.json();
+          return normalizeCase(raw);
+        }
+      } catch (e) {
+        console.warn('Real /demo/load API failed, using fallback:', e);
+      }
+    }
     if (typeof window !== 'undefined') {
       const cases = getStoredItem<Case[]>(STORAGE_KEYS.CASES, []);
       const existingIdx = cases.findIndex(c => c.case_id === DEMO_CASE_102.case_id);
@@ -78,7 +110,7 @@ export const forensicsApi = {
       const non102Timeline = allTimeline.filter(t => t.case_id !== DEMO_CASE_102.case_id);
       setStoredItem(STORAGE_KEYS.TIMELINE, [...DEMO_TIMELINE_102, ...non102Timeline]);
     }
-    return DEMO_CASE_102;
+    return normalizeCase(DEMO_CASE_102);
   },
 
   // Cases API
@@ -86,26 +118,33 @@ export const forensicsApi = {
     if (!USE_MOCK) {
       try {
         const res = await fetch(`${API_BASE_URL}/cases`);
-        if (res.ok) return await res.json();
+        if (res.ok) {
+          const rawData = await res.json();
+          return Array.isArray(rawData) ? rawData.map(normalizeCase) : [normalizeCase(rawData)];
+        }
       } catch (e) {
         console.warn('Real API failed, falling back to mock:', e);
       }
     }
     const stored = getStoredItem<Case[]>(STORAGE_KEYS.CASES, [DEMO_CASE_102]);
-    return stored;
+    return stored.map(normalizeCase);
   },
 
   getCaseById: async (caseId: string): Promise<Case | null> => {
     if (!USE_MOCK) {
       try {
         const res = await fetch(`${API_BASE_URL}/cases/${caseId}`);
-        if (res.ok) return await res.json();
+        if (res.ok) {
+          const rawData = await res.json();
+          return normalizeCase(rawData);
+        }
       } catch (e) {
         console.warn('Real API failed, falling back to mock:', e);
       }
     }
     const cases = getStoredItem<Case[]>(STORAGE_KEYS.CASES, [DEMO_CASE_102]);
-    return cases.find(c => c.case_id === caseId) || null;
+    const found = cases.find(c => c.case_id === caseId);
+    return found ? normalizeCase(found) : null;
   },
 
   createCase: async (payload: Partial<Case>): Promise<Case> => {

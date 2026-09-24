@@ -58,52 +58,63 @@ export const EntityGraphView: React.FC<EntityGraphViewProps> = ({
     };
     nodes.forEach((n) => byType[n.type]?.push(n));
 
+    // Helper to store coords under both node id and node label
+    const storeCoords = (n: Entity, pos: { x: number; y: number }) => {
+      if (n.id) coords[n.id] = pos;
+      if (n.label) coords[n.label] = pos;
+    };
+
     // Persons in inner circle
     const personRadius = 200;
     byType.PERSON.forEach((p, idx) => {
       const angle = (idx / (byType.PERSON.length || 1)) * 2 * Math.PI;
-      coords[p.id] = {
+      const pos = {
         x: center.x + personRadius * Math.cos(angle),
         y: center.y + personRadius * Math.sin(angle)
       };
+      storeCoords(p, pos);
     });
 
     // Organizations in upper arc
     const orgRadius = 340;
     byType.ORGANIZATION.forEach((org, idx) => {
       const angle = -Math.PI / 4 + (idx / (byType.ORGANIZATION.length || 1)) * Math.PI;
-      coords[org.id] = {
+      const pos = {
         x: center.x + orgRadius * Math.cos(angle),
         y: center.y + orgRadius * Math.sin(angle) * 0.9
       };
+      storeCoords(org, pos);
     });
 
     // Locations in lower-right arc
     const locRadius = 380;
     byType.LOCATION.forEach((loc, idx) => {
       const angle = Math.PI / 3 + (idx / (byType.LOCATION.length || 1)) * (Math.PI / 1.5);
-      coords[loc.id] = {
+      const pos = {
         x: center.x + locRadius * Math.cos(angle) * 1.1,
         y: center.y + locRadius * Math.sin(angle) * 0.8
       };
+      storeCoords(loc, pos);
     });
 
     // Events along upper-left
     const eventRadius = 320;
     byType.EVENT.forEach((evt, idx) => {
       const angle = Math.PI + (idx / (byType.EVENT.length || 1)) * (Math.PI / 2);
-      coords[evt.id] = {
+      const pos = {
         x: center.x + eventRadius * Math.cos(angle) * 1.1,
         y: center.y + eventRadius * Math.sin(angle)
       };
+      storeCoords(evt, pos);
     });
 
     // Other/Accounts near center / lower cluster
     byType.OTHER.forEach((oth, idx) => {
-      coords[oth.id] = {
+      const pos = {
         x: center.x + (idx % 2 === 0 ? -120 : 120),
         y: center.y + (idx < 2 ? 80 : 160)
       };
+      storeCoords(oth, pos);
     });
 
     return coords;
@@ -114,7 +125,11 @@ export const EntityGraphView: React.FC<EntityGraphViewProps> = ({
   }, [nodes, activeTypes]);
 
   const visibleEdges = useMemo(() => {
-    const visibleIds = new Set(visibleNodes.map((n) => n.id));
+    const visibleIds = new Set<string>();
+    visibleNodes.forEach((n) => {
+      if (n.id) visibleIds.add(n.id);
+      if (n.label) visibleIds.add(n.label);
+    });
     return edges.filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target));
   }, [edges, visibleNodes]);
 
@@ -254,7 +269,10 @@ export const EntityGraphView: React.FC<EntityGraphViewProps> = ({
 
               const isEdgeHighlighted =
                 selectedEntity &&
-                (edge.source === selectedEntity.id || edge.target === selectedEntity.id);
+                (edge.source === selectedEntity.id ||
+                 edge.source === selectedEntity.label ||
+                 edge.target === selectedEntity.id ||
+                 edge.target === selectedEntity.label);
 
               return (
                 <g key={`edge-${idx}`}>
@@ -352,7 +370,7 @@ export const EntityGraphView: React.FC<EntityGraphViewProps> = ({
                   </text>
 
                   {/* Risk Badge on Node */}
-                  {(node.metadata.risk_score || 0) > 80 && (
+                  {(node.metadata?.risk_score || 0) > 80 && (
                     <circle
                       cx="14"
                       cy="-14"

@@ -64,14 +64,14 @@ export const NodeInspectorSheet: React.FC<NodeInspectorProps> = ({
             <div className="flex items-center gap-1.5 mt-1 font-bold text-lg font-mono">
               <span
                 className={`${
-                  (entity.metadata.risk_score || 0) > 75
+                  (entity.metadata?.risk_score || 0) > 75
                     ? 'text-rose-600'
-                    : (entity.metadata.risk_score || 0) > 40
+                    : (entity.metadata?.risk_score || 0) > 40
                     ? 'text-amber-600'
                     : 'text-emerald-600'
                 }`}
               >
-                {entity.metadata.risk_score || 'N/A'}/100
+                {entity.metadata?.risk_score || 'N/A'}/100
               </span>
             </div>
           </div>
@@ -81,7 +81,7 @@ export const NodeInspectorSheet: React.FC<NodeInspectorProps> = ({
               Cross-Dossier Mentions
             </span>
             <div className="text-lg font-bold text-[#0F172A] mt-1 font-mono">
-              {entity.metadata.mentions || 1} hits
+              {entity.metadata?.mentions || 1} hits
             </div>
           </div>
         </div>
@@ -91,19 +91,19 @@ export const NodeInspectorSheet: React.FC<NodeInspectorProps> = ({
           <h4 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
             Entity Intelligence
           </h4>
-          {entity.metadata.role && (
+          {entity.metadata?.role && (
             <div className="text-xs text-[#0F172A] font-medium bg-[#F8F9FA] p-2.5 rounded-lg border border-[#E2E8F0]">
               <span className="text-[#94A3B8] block text-[10px] uppercase font-bold">Official Role</span>
               {entity.metadata.role}
             </div>
           )}
-          {entity.metadata.address && (
+          {entity.metadata?.address && (
             <div className="text-xs text-[#334155] bg-[#F8F9FA] p-2.5 rounded-lg border border-[#E2E8F0]">
               <span className="text-[#94A3B8] block text-[10px] uppercase font-bold">Jurisdiction / Address</span>
               {entity.metadata.address}
             </div>
           )}
-          {entity.metadata.description && (
+          {entity.metadata?.description && (
             <div className="text-xs text-[#475569] bg-[#F8F9FA] p-2.5 rounded-lg border border-[#E2E8F0] leading-relaxed">
               <span className="text-[#94A3B8] block text-[10px] uppercase font-bold">Investigator Notes</span>
               {entity.metadata.description}
